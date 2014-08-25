@@ -1,0 +1,25 @@
+<html>
+<head>
+  <link rel="stylesheet" href="./css/trafficjam.css" />
+  <script type="text/javascript" src="./js/jquery.min.js"></script>
+  <script type="text/javascript" src="./js/trafficjam.js"></script>
+  <script type="text/javascript">
+    $(function() {
+    var tg = new TrafficGame($('#rush-hour-game'),
+    {
+    height: 10,
+    width: 10,
+    pieces : [
+    { row: 1, col: 1, height: 1, width: 2 }
+    ]
+    });
+    $(document).mousemove(function(evt) {
+    tg.findClosestCell(evt.pageX, evt.pageY);
+    });
+    });
+  </script>
+</head>
+<body>
+  <div id="rush-hour-game" style="position: absolute; height: 80%; width: 80%; margin: 0; padding: 0; top: 10%; left: 10%; display: block;"></div>
+</body>
+</html>

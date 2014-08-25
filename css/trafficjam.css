@@ -1,0 +1,32 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+}
+
+div.traffic-game {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+div.traffic-cell {
+    position: absolute;
+    border: 2px solid black;
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+
+div.traffic-piece {
+    position: absolute;
+    border: 2px solid black;
+    display: block;
+    margin: 0;
+    padding: 0;
+    background-color: #BCC;
+}
