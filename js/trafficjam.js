@@ -9,6 +9,8 @@ var TrafficGame = (function TrafficGameClosure() {
 	this.$topel.append(self.$el);
 	this.pieces = [];
 	this.makeCells(kwargs.height, kwargs.width);
+	this.rows = kwargs.height;
+	this.cols = kwargs.width;
 	this.addPieces(kwargs.pieces);
     }
 
@@ -77,6 +79,48 @@ var TrafficGame = (function TrafficGameClosure() {
 
 	addPiece : function(kwargs) {
 	    this.pieces.push(new TrafficPiece(this, kwargs));
+	},
+
+	isOkayMove : function(piece, dx, dy) {
+	    // Ensure piece stays on the board.
+	    if (piece.row + dy < 0 || piece.row + dy + piece.height > this.rows)
+		return false;
+	    if (piece.col + dx < 0 || piece.col + dx + piece.width > this.cols)
+		return false;
+
+
+	    for (var i = 0; i < this.pieces.length; i++) {
+		if (this.pieces[i] === piece) continue;
+
+		var hits_col = false,
+		    hits_row = false;
+
+		if (piece.col + dx >= this.pieces[i].col &&
+		    piece.col + dx < this.pieces[i].col + this.pieces[i].width) {
+		    hits_col = true;
+		}
+
+		if (piece.col + dx + piece.width > this.pieces[i].col &&
+		    piece.col + dx + piece.width <= this.pieces[i].col + this.pieces[i].width) {
+		    hits_col = true;
+		}
+
+		if (piece.row + dy >= this.pieces[i].row &&
+		    piece.row + dy < this.pieces[i].row + this.pieces[i].height) {
+		    hits_row = true;
+		}
+
+		if (piece.row + dy + piece.height > this.pieces[i].row &&
+		    piece.row + dy + piece.height <= this.pieces[i].row + this.pieces[i].height) {
+		    hits_row = true;
+		}
+
+		if (hits_col && hits_row) return false;
+		    
+	    }
+
+	    return true;
+
 	}
     };
     
@@ -182,36 +226,53 @@ var TrafficPiece = (function TrafficPieceClosure() {
 
     TrafficPiece.prototype = {
 
-	render : function(offsetX, offsetY) {
+	render : function() { //offsetX, offsetY) {
 	    var self = this;
-	    offsetX = offsetX | 0;
-	    offsetY = offsetY | 0;
+//	    offsetX = offsetX | 0;
+//	    offsetY = offsetY | 0;
 	    this.$el
 	    	.css('height', (self.height * self.game.cell_height) + '%')
 		.css('width', (self.width * self.game.cell_width) + '%')
-		.css('top', ((self.row + offsetY) * self.game.cell_height) + '%')
-		.css('left', ((self.col + offsetX) * self.game.cell_width) + '%');
+		.css('top', (self.row * self.game.cell_height) + '%')
+		.css('left', (self.col * self.game.cell_width) + '%');
+//		.css('top', ((self.row + offsetY) * self.game.cell_height) + '%')
+//		.css('left', ((self.col + offsetX) * self.game.cell_width) + '%');
+	},
 
+	move : function(dx, dy) {
+	    if (this.game.isOkayMove(this, dx, dy)) {
+		this.row += dy;
+		this.col += dx;
+		this.render();
+		return true;
+	    } else {
+		return false;
+	    }
 	},
 	
 	bindDrag : function() {
 	    var self = this;
 
 	    this.$el.mousedown(function(down_evt) {
-		var start_x = down_evt.pageX,
-		    start_y = down_evt.pageY,
+		$('body').css('cursor', 'none');
+		var lastx = down_evt.pageX,
+		    lasty = down_evt.pageY,
+		    dx = 0,
+		    dy = 0,
 		    cell_w_px = self.tl_cell.right - self.tl_cell.left,
 		    cell_h_px = self.tl_cell.bottom - self.tl_cell.top;
 		$(document).on('mousemove.traffic-piece-mouse', function(evt) {
-		    self.render(
-			Math.round((evt.pageX - start_x) / cell_w_px),
-			Math.round((evt.pageY - start_y) / cell_h_px)
-		    );
+		    dx = Math.round((evt.pageX - lastx) / cell_w_px);
+		    dy = Math.round((evt.pageY - lasty) / cell_h_px);
+		    if (dx != 0 || dy != 0) {
+			self.move(dx, dy);
+			if (dx != 0) lastx = evt.pageX;
+			if (dy != 0) lasty = evt.pageY;
+		    }
 		});
 		$(document).mouseup(function() {
-		    self.render();
+		    $('body').css('cursor', '');
 		    $(document).off('.traffic-piece-mouse');
-		    console.log('mouseup');
 		});
 	    });
 	}
