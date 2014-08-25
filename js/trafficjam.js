@@ -67,8 +67,6 @@ var TrafficGame = (function TrafficGameClosure() {
 		}
 	    }
 
-	    cell.highlight();
-
 	    return cell;
 	},
 
@@ -78,10 +76,7 @@ var TrafficGame = (function TrafficGameClosure() {
 	},
 
 	addPiece : function(kwargs) {
-	    this.pieces.push(new TrafficPiece(this.$el, 
-					      this.cell_width,
-					      this.cell_height, 
-					      kwargs));
+	    this.pieces.push(new TrafficPiece(this, kwargs));
 	}
     };
     
@@ -172,19 +167,55 @@ var TrafficCell = (function TrafficCellClosure() {
 
 var TrafficPiece = (function TrafficPieceClosure() {
 
-    function TrafficPiece(holder, cell_width, cell_height, kwargs) {
-	this.$el = 
-	    $(document.createElement('div'))
-	    .addClass('traffic-piece')
-	    .css('height', (kwargs.height * cell_height) + '%')
-	    .css('width', (kwargs.width * cell_width) + '%')
-	    .css('top', (kwargs.row * cell_height) + '%')
-	    .css('left', (kwargs.col * cell_width) + '%');
-	this.$el.appendTo(holder);
+    function TrafficPiece(game, kwargs) {
+	this.$el = $(document.createElement('div')).addClass('traffic-piece');
+	this.game = game;
+	this.tl_cell = game.cells[kwargs.row][kwargs.col];
+	this.row = kwargs.row;
+	this.col = kwargs.col;
+	this.height = kwargs.height;
+	this.width = kwargs.width;
+	this.render();
+	this.$el.appendTo(game.$el);
+	this.bindDrag();
     }
 
     TrafficPiece.prototype = {
+
+	render : function(offsetX, offsetY) {
+	    var self = this;
+	    offsetX = offsetX | 0;
+	    offsetY = offsetY | 0;
+	    this.$el
+	    	.css('height', (self.height * self.game.cell_height) + '%')
+		.css('width', (self.width * self.game.cell_width) + '%')
+		.css('top', ((self.row + offsetY) * self.game.cell_height) + '%')
+		.css('left', ((self.col + offsetX) * self.game.cell_width) + '%');
+
+	},
 	
+	bindDrag : function() {
+	    var self = this;
+
+	    this.$el.mousedown(function(down_evt) {
+		var start_x = down_evt.pageX,
+		    start_y = down_evt.pageY,
+		    cell_w_px = self.tl_cell.right - self.tl_cell.left,
+		    cell_h_px = self.tl_cell.bottom - self.tl_cell.top;
+		$(document).on('mousemove.traffic-piece-mouse', function(evt) {
+		    self.render(
+			Math.round((evt.pageX - start_x) / cell_w_px),
+			Math.round((evt.pageY - start_y) / cell_h_px)
+		    );
+		});
+		$(document).mouseup(function() {
+		    self.render();
+		    $(document).off('.traffic-piece-mouse');
+		    console.log('mouseup');
+		});
+	    });
+	}
+
     };
 
     return TrafficPiece;
